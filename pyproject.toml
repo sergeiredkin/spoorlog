@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "spoorlog"
+version = "1.0.0"
+description = "Terminal forensic triage tool for live Linux systems"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "Sergei Redkin" }]
+license = { text = "MIT" }
+keywords = [
+    "forensics", "incident-response", "dfir", "linux", "security",
+    "triage", "tui", "rootkit", "textual",
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console :: Curses",
+    "Intended Audience :: System Administrators",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Topic :: Security",
+    "Topic :: System :: Monitoring",
+]
+dependencies = [
+    "textual>=0.60",
+    "psutil>=5.9",
+]
+
+# NOTE: replace YOUR-USERNAME with your GitHub handle before publishing.
+[project.urls]
+Homepage = "https://github.com/YOUR-USERNAME/spoorlog"
+Repository = "https://github.com/YOUR-USERNAME/spoorlog"
+Issues = "https://github.com/YOUR-USERNAME/spoorlog/issues"
+
+[project.scripts]
+spoorlog = "spoorlog.__main__:main"
+
+[tool.setuptools.packages.find]
+include = ["spoorlog*"]
+
+[tool.setuptools.package-data]
+spoorlog = ["ui/*.tcss"]

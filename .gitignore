@@ -1,0 +1,27 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+*.egg
+
+# --- Virtual environments ---
+.venv/
+venv/
+env/
+
+# --- spoorlog output (may contain host/system evidence — never commit) ---
+spoorlog-report-*.json
+triage-report-*.json
+
+# --- editor / OS cruft ---
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# --- assistant scratch / local notes ---
+.claude/

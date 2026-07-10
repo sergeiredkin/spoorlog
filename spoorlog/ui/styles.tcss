@@ -1,0 +1,120 @@
+/* spoorlog — btop-inspired dark theme */
+
+Screen {
+    background: $surface;
+    color: $text;
+}
+
+Header {
+    background: $panel;
+}
+
+/* ---- Overview dashboard ---- */
+
+#overview {
+    layout: horizontal;
+    height: 1fr;
+}
+
+#overview-left {
+    width: 40%;
+    min-width: 34;
+    height: 1fr;
+    padding: 0 1;
+}
+
+#overview-right {
+    width: 1fr;
+    height: 1fr;
+    padding: 0 1;
+}
+
+.card {
+    border: round $primary 30%;
+    padding: 0 1;
+    margin-bottom: 1;
+    background: $panel;
+}
+
+.card-title {
+    text-style: bold;
+    color: $accent;
+}
+
+#findings-card {
+    height: 1fr;
+    border: round $primary 40%;
+    background: $panel;
+    padding: 0 1;
+}
+
+#findings-list {
+    height: 1fr;
+    overflow-y: auto;
+}
+
+/* ---- Generic data panel ---- */
+
+.panel {
+    height: 1fr;
+}
+
+.panel-status {
+    height: auto;
+    color: $text-muted;
+    padding: 0 1;
+}
+
+Input.filter {
+    display: none;
+    dock: top;
+    border: tall $accent;
+}
+
+Input.filter.-visible {
+    display: block;
+}
+
+DataTable {
+    height: 1fr;
+}
+
+DataTable > .datatable--cursor {
+    background: $accent 40%;
+}
+
+/* ---- Detail modal ---- */
+
+DetailScreen {
+    align: center middle;
+}
+
+#detail-box {
+    width: 80%;
+    max-width: 120;
+    height: auto;
+    max-height: 80%;
+    border: thick $accent;
+    background: $panel;
+    padding: 1 2;
+}
+
+#detail-body {
+    height: auto;
+    max-height: 30;
+    overflow-y: auto;
+}
+
+.sev-crit { color: red; text-style: bold; }
+.sev-warn { color: yellow; }
+.sev-info { color: $text-muted; }
+
+/* ---- Timeline activity histogram ---- */
+
+.timeline-hist {
+    height: auto;
+    padding: 0 1;
+    margin-bottom: 1;
+    background: $panel;
+    border-bottom: round $primary 30%;
+}
