@@ -29,11 +29,10 @@ dependencies = [
     "psutil>=5.9",
 ]
 
-# NOTE: replace YOUR-USERNAME with your GitHub handle before publishing.
 [project.urls]
-Homepage = "https://github.com/YOUR-USERNAME/spoorlog"
-Repository = "https://github.com/YOUR-USERNAME/spoorlog"
-Issues = "https://github.com/YOUR-USERNAME/spoorlog/issues"
+Homepage = "https://github.com/sergeiredkin/spoorlog"
+Repository = "https://github.com/sergeiredkin/spoorlog"
+Issues = "https://github.com/sergeiredkin/spoorlog/issues"
 
 [project.scripts]
 spoorlog = "spoorlog.__main__:main"
