@@ -1,7 +1,7 @@
 """Tests for spoorlog findings detection and ranking."""
 
 import pytest
-from spoorlog.findings import Finding, Severity
+from spoorlog.findings import Finding, Severity, sort_findings
 
 
 class TestFindingCreation:
@@ -9,39 +9,41 @@ class TestFindingCreation:
 
     def test_finding_basic_creation(self):
         """Create a finding with all required fields."""
-        f = Finding("proc", "process from deleted binary", Severity.CRITICAL)
-        assert f.area == "proc"
-        assert f.message == "process from deleted binary"
+        f = Finding(severity=Severity.CRITICAL, source="proc", title="process from deleted binary")
+        assert f.source == "proc"
+        assert f.title == "process from deleted binary"
         assert f.severity == Severity.CRITICAL
 
-    def test_finding_with_tags(self):
-        """Finding can include optional tags for drill-down."""
-        f = Finding("proc", "pid 4182 uses deleted binary", Severity.CRITICAL, tags={"pid": "4182", "deleted": True})
-        assert f.tags.get("pid") == "4182"
-        assert f.tags.get("deleted") is True
+    def test_finding_with_detail(self):
+        """Finding can include detailed evidence."""
+        f = Finding(
+            severity=Severity.CRITICAL,
+            source="proc",
+            title="pid 4182 uses deleted binary",
+            detail="PID 4182: /tmp/miner (deleted)",
+            key="pid:4182"
+        )
+        assert f.detail == "PID 4182: /tmp/miner (deleted)"
+        assert f.key == "pid:4182"
 
 
-class TestSeverityRanking:
-    """Test that findings rank correctly by severity."""
+class TestSeverityOrdering:
+    """Test that severity levels are ordered correctly."""
 
-    def test_critical_ranks_highest(self):
-        """CRITICAL > WARNING > INFO."""
-        critical = Finding("x", "msg", Severity.CRITICAL)
-        warning = Finding("x", "msg", Severity.WARNING)
-        info = Finding("x", "msg", Severity.INFO)
-
-        assert critical.rank() > warning.rank()
-        assert warning.rank() > info.rank()
+    def test_severity_values(self):
+        """Severity values ordered: INFO < WARNING < CRITICAL."""
+        assert Severity.INFO < Severity.WARNING
+        assert Severity.WARNING < Severity.CRITICAL
 
     def test_findings_sort_by_severity(self):
-        """Findings sort high-to-low severity."""
+        """Findings sort high-to-low severity with sort_findings()."""
         findings = [
-            Finding("x", "msg", Severity.INFO),
-            Finding("x", "msg", Severity.CRITICAL),
-            Finding("x", "msg", Severity.WARNING),
+            Finding(Severity.INFO, "x", "info msg"),
+            Finding(Severity.CRITICAL, "x", "crit msg"),
+            Finding(Severity.WARNING, "x", "warn msg"),
         ]
 
-        sorted_findings = sorted(findings, key=lambda f: f.rank(), reverse=True)
+        sorted_findings = sort_findings(findings)
         assert sorted_findings[0].severity == Severity.CRITICAL
         assert sorted_findings[1].severity == Severity.WARNING
         assert sorted_findings[2].severity == Severity.INFO
@@ -58,17 +60,26 @@ class TestFindingAggregation:
         assert len(critical) == 2
         assert len(warning) == 3
 
-    def test_findings_by_area(self, mock_findings_data):
-        """Group findings by area (proc, net, users, etc)."""
-        by_area = {}
+    def test_findings_by_source(self, mock_findings_data):
+        """Group findings by source (proc, net, users, etc)."""
+        by_source = {}
         for f in mock_findings_data:
-            if f.area not in by_area:
-                by_area[f.area] = []
-            by_area[f.area].append(f)
+            if f.source not in by_source:
+                by_source[f.source] = []
+            by_source[f.source].append(f)
 
-        assert len(by_area["proc"]) == 1
-        assert len(by_area["net"]) == 1
-        assert len(by_area["users"]) == 1
+        assert len(by_source["proc"]) == 1
+        assert len(by_source["net"]) == 1
+        assert len(by_source["users"]) == 1
+
+    def test_to_dict_conversion(self):
+        """Finding converts to dict for JSON export."""
+        f = Finding(Severity.CRITICAL, "proc", "malware detected", detail="Evidence", key="p123")
+        d = f.to_dict()
+
+        assert d["severity"] == "CRIT"
+        assert d["source"] == "proc"
+        assert d["title"] == "malware detected"
 
 
 class TestCompromisedSystemDetection:

@@ -2,6 +2,7 @@
 
 import pytest
 from spoorlog.collectors.processes import ProcessCollector
+from spoorlog.collectors.base import CollectResult
 from spoorlog.findings import Severity
 
 
@@ -14,18 +15,23 @@ class TestProcessCollectorBasics:
         assert collector is not None
         assert hasattr(collector, "collect")
 
-    def test_collect_returns_findings(self):
-        """collect() returns a list of findings."""
+    def test_collect_returns_collect_result(self):
+        """collect() returns a CollectResult with columns, rows, and findings."""
         collector = ProcessCollector()
-        # On a real system, this will return actual findings
+        # On a real system, this will return actual data
         # Test just ensures it doesn't crash
         try:
-            findings = collector.collect()
-            assert isinstance(findings, list)
+            result = collector.collect()
+            # CollectResult has columns, rows, and findings
+            assert isinstance(result, CollectResult)
+            assert hasattr(result, "columns")
+            assert hasattr(result, "rows")
+            assert hasattr(result, "findings")
+            assert isinstance(result.findings, list)
             # Each finding should have required attributes
-            for f in findings:
-                assert hasattr(f, "area")
-                assert hasattr(f, "message")
+            for f in result.findings:
+                assert hasattr(f, "source")
+                assert hasattr(f, "title")
                 assert hasattr(f, "severity")
         except PermissionError:
             # Expected if running without root; that's OK

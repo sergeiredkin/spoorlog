@@ -145,9 +145,9 @@ def mock_findings_data():
     from spoorlog.findings import Finding, Severity
 
     return [
-        Finding("proc", "pid 4182 from deleted binary", Severity.CRITICAL),
-        Finding("net", "bash → 185.x.x.x:4444", Severity.CRITICAL),
-        Finding("users", "extra UID-0 account detected", Severity.WARNING),
-        Finding("auth", "240 failed SSH attempts from 203.x", Severity.WARNING),
-        Finding("persist", "new systemd unit: update.service", Severity.WARNING),
+        Finding(Severity.CRITICAL, "proc", "pid 4182 from deleted binary"),
+        Finding(Severity.CRITICAL, "net", "bash → 185.x.x.x:4444"),
+        Finding(Severity.WARNING, "users", "extra UID-0 account detected"),
+        Finding(Severity.WARNING, "logs", "240 failed SSH attempts from 203.x"),
+        Finding(Severity.WARNING, "persist", "new systemd unit: update.service"),
     ]
