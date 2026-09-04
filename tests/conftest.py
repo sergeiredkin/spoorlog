@@ -67,6 +67,13 @@ def healthy_system_snapshot():
             {"name": "openssh-server", "version": "1:8.9p1-3ubuntu0.5", "status": "installed"},
             {"name": "curl", "version": "7.85.0-1ubuntu1.12", "status": "installed"},
         ],
+        "persistence": {
+            "crontab": [],
+            "systemd_units": [],
+            "shell_rc_lines": [],
+            "ld_so_preload": None,
+            "rc_local": None,
+        },
     }
 
 
@@ -157,6 +164,9 @@ def compromised_system_snapshot():
             "systemd_units": [
                 {"name": "update.service", "path": "/etc/systemd/system/update.service", "modified_recent": True},
             ],
+            "shell_rc_lines": [],
+            "ld_so_preload": None,
+            "rc_local": None,
         },
     }
 
