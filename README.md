@@ -53,35 +53,52 @@ throughput sparkline — so system state reads at a glance alongside the finding
 
 ## Install
 
-**As a normal command (recommended)** — [pipx](https://pipx.pypa.io) puts
-`spoorlog` on your `PATH` in its own isolated environment:
+**Recommended: pipx (isolated environment)**
 
 ```bash
 sudo apt install pipx && pipx ensurepath
 pipx install git+https://github.com/sergeiredkin/spoorlog.git
 ```
 
-**From a local checkout:**
+**From a local checkout (development):**
 
 ```bash
 git clone https://github.com/sergeiredkin/spoorlog.git
 cd spoorlog
 python3 -m venv .venv
-.venv/bin/pip install -e .
+source .venv/bin/activate
+pip install -e .
 ```
 
 > Requires Python ≥ 3.10 on Linux.
-> 
-> ⚠️ **After v1.1:** `pipx install spoorlog` (no GitHub URL needed)
 
 ## Run
 
+**Option 1: Full path (works immediately after pipx install)**
 ```bash
-sudo -E spoorlog    # recommended — root sees the full picture
-spoorlog            # works unprivileged; unreadable areas show "needs root"
+sudo /home/$USER/.local/bin/spoorlog
 ```
 
-(If you installed into a venv instead of pipx, call `.venv/bin/spoorlog`.)
+**Option 2: Make `sudo spoorlog` work (permanent, recommended)**
+
+Run once to fix sudo PATH:
+```bash
+sudo visudo
+```
+Find the line starting with `Defaults secure_path` and add `:/home/$USER/.local/bin` to it.  
+Save and exit. Then:
+```bash
+sudo -E spoorlog
+```
+
+**Unprivileged mode** (limited visibility, no root required):
+```bash
+spoorlog            # works but unreadable areas show "needs root"
+```
+
+**See also:**
+- [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for common install/run issues
+- [User Guide & Flag Reference](docs/GUIDE.md) — what every flag means
 
 Keys: `1`–`9` / `0` / `t` switch tabs · `r` refresh · `/` filter the current
 table · `Enter` open full evidence for a row · `e` export a JSON report · `q`
