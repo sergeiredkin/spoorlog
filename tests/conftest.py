@@ -104,13 +104,35 @@ def compromised_system_snapshot():
         ],
         "network_connections": [
             {
-                # Suspicious outbound connection
+                # Listener on all interfaces (0.0.0.0)
+                "type": "LISTEN",
+                "protocol": "tcp",
+                "local_addr": "0.0.0.0",
+                "local_port": 4444,
+                "remote_addr": None,
+                "remote_port": None,
+                "process": {"name": "malware", "pid": 4182},
+                "state": "LISTEN",
+            },
+            {
+                # First C2 outbound connection
                 "type": "ESTABLISHED",
                 "protocol": "tcp",
                 "local_addr": "192.168.1.50",
                 "local_port": 54321,
                 "remote_addr": "185.220.101.50",
                 "remote_port": 4444,
+                "process": {"name": "bash", "pid": 5555},
+                "state": "ESTABLISHED",
+            },
+            {
+                # Second outbound connection to different C2
+                "type": "ESTABLISHED",
+                "protocol": "tcp",
+                "local_addr": "192.168.1.50",
+                "local_port": 54322,
+                "remote_addr": "203.0.113.99",
+                "remote_port": 8888,
                 "process": {"name": "bash", "pid": 5555},
                 "state": "ESTABLISHED",
             },
