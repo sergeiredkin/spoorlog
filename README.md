@@ -58,20 +58,21 @@ throughput sparkline — so system state reads at a glance alongside the finding
 
 ```bash
 sudo apt install pipx && pipx ensurepath
-pipx install git+https://github.com/YOUR-USERNAME/spoorlog.git
+pipx install git+https://github.com/sergeiredkin/spoorlog.git
 ```
 
 **From a local checkout:**
 
 ```bash
-git clone https://github.com/YOUR-USERNAME/spoorlog.git
+git clone https://github.com/sergeiredkin/spoorlog.git
 cd spoorlog
 python3 -m venv .venv
 .venv/bin/pip install -e .
 ```
 
-> Replace `YOUR-USERNAME` with your GitHub handle. Requires Python ≥ 3.10 on
-> Linux.
+> Requires Python ≥ 3.10 on Linux.
+> 
+> ⚠️ **After v1.1:** `pipx install spoorlog` (no GitHub URL needed)
 
 ## Run
 
