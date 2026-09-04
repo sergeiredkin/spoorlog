@@ -29,6 +29,14 @@ dependencies = [
     "psutil>=5.9",
 ]
 
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "flake8>=6.0",
+    "pyright>=1.1",
+]
+
 [project.urls]
 Homepage = "https://github.com/sergeiredkin/spoorlog"
 Repository = "https://github.com/sergeiredkin/spoorlog"

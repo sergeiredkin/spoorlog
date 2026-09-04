@@ -26,3 +26,17 @@ jobs:
           python-version: '3.10'
       - run: pip install -e . pyright
       - run: pyright spoorlog || true
+
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.10', '3.11', '3.12']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: pip install -e ".[dev]"
+      - run: pytest --cov=spoorlog --cov-report=term-missing tests/
+      - run: python -m pytest tests/ -v
