@@ -165,6 +165,19 @@ must stay read-only on the host under investigation** — the only write is the
 user-requested report. Test detection changes against fixtures or a disposable
 VM, never by modifying the host.
 
+## Complementary Tools
+
+**spoorlog** does instant triage. For continuous monitoring, see:
+
+- **[Sentry](https://github.com/sergeiredkin/sentry-hunt)** — Local Linux threat-hunting tool  
+  Continuously watches for baseline changes, surfaces alerts over time.
+
+Use them together:
+- **Sentry** monitors continuously, catches what changed
+- **spoorlog** investigates instantly when you need fast answers
+
+Both are read-only, local-first, designed for incident response teams.
+
 ## License
 
 [MIT](LICENSE) © 2026 Sergei Redkin
