@@ -20,6 +20,7 @@ from . import __version__
 def build_report(
     results: dict[str, CollectResult],
     comparison: dict | None = None,
+    sentry_context: dict | None = None,
 ) -> dict:
     """Assemble a serialisable report from each collector's CollectResult."""
     all_findings = []
@@ -61,6 +62,8 @@ def build_report(
     }
     if comparison is not None:
         report["comparison"] = comparison
+    if sentry_context is not None:
+        report["sentry_context"] = sentry_context
     return report
 
 
@@ -75,13 +78,14 @@ def write_report(
     results: dict[str, CollectResult],
     path: str | None = None,
     comparison: dict | None = None,
+    sentry_context: dict | None = None,
 ) -> str:
     """Write the report to ``path`` (or a timestamped file in cwd) and return
     the path actually written."""
     if path is None:
         stamp = time.strftime("%Y%m%d-%H%M%S")
         path = os.path.abspath(f"spoorlog-report-{socket.gethostname()}-{stamp}.json")
-    report = build_report(results, comparison=comparison)
+    report = build_report(results, comparison=comparison, sentry_context=sentry_context)
     with open(path, "w", encoding="utf-8") as fh:
         json.dump(report, fh, indent=2, default=str)
     return path

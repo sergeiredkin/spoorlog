@@ -8,6 +8,7 @@ Flags:
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -39,14 +40,18 @@ def main(argv: list[str] | None = None) -> int:
         "--output", metavar="PATH",
         help="output path for --compare (defaults to a timestamped report)",
     )
+    parser.add_argument(
+        "--context", metavar="PATH",
+        help="JSON context from another tool, such as a Sentry alert",
+    )
     args = parser.parse_args(argv)
 
     if args.baseline:
         return _batch_report(args.baseline)
     if args.compare:
-        return _batch_report(args.output, compare_path=args.compare)
+        return _batch_report(args.output, compare_path=args.compare, context_path=args.context)
     if args.report is not None:
-        return _batch_report(args.report or None)
+        return _batch_report(args.report or None, context_path=args.context)
 
     # interactive TUI
     from .app import run
@@ -69,7 +74,11 @@ def _collect_one(collector):
     return result
 
 
-def _batch_report(path: str | None, compare_path: str | None = None) -> int:
+def _batch_report(
+    path: str | None,
+    compare_path: str | None = None,
+    context_path: str | None = None,
+) -> int:
     from .collectors.config import ConfigCollector
     from .collectors.files import FilesCollector
     from .collectors.integrity import IntegrityCollector
@@ -82,6 +91,15 @@ def _batch_report(path: str | None, compare_path: str | None = None) -> int:
     from .collectors.users import UsersCollector
     from .baseline import compare_reports, load_report
     from .report import build_report, write_report
+
+    context = None
+    if context_path:
+        try:
+            with open(context_path, encoding="utf-8") as fh:
+                context = json.load(fh)
+        except (OSError, ValueError) as exc:
+            print(f"[!] context load failed: {exc}", file=sys.stderr)
+            return 2
 
     collectors = {
         "proc": ProcessCollector(),
@@ -121,8 +139,14 @@ def _batch_report(path: str | None, compare_path: str | None = None) -> int:
         except (OSError, ValueError) as exc:
             print(f"[!] baseline comparison failed: {exc}", file=sys.stderr)
             return 2
-    out = write_report(results, path, comparison=comparison)
+    out = write_report(results, path, comparison=comparison, sentry_context=context)
     total = sum(len(r.findings) for r in results.values())
+    if context:
+        print(
+            f"[>] investigating Sentry alert {context.get('alert_id', '?')} "
+            f"({context.get('rule_id', '?')})",
+            file=sys.stderr,
+        )
     print(f"[+] {total} findings — report written to {out}", file=sys.stderr)
     return 0
 

@@ -116,6 +116,16 @@ sudo spoorlog --report          # writes spoorlog-report-<host>-<ts>.json
 sudo spoorlog --report /mnt/usb/case01.json
 ```
 
+### Sentry handoff
+
+Sentry can launch a live spoorlog scan for a stored alert:
+
+```bash
+sentry investigate ALERT_ID --output investigation.json
+```
+
+spoorlog accepts the alert context with `--context PATH` and preserves it in the report under `sentry_context`. This keeps Sentry as the source of persistent alert history while spoorlog remains the independent triage and evidence-export tool.
+
 Capture and compare a portable point-in-time baseline:
 
 ```bash
