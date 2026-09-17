@@ -27,6 +27,20 @@ class TestIntegrityCollectorBasics:
             pytest.skip("Requires root to run dpkg/rpm verification")
 
 
+class TestVerifierSafety:
+    """The expensive verifier must fail visibly instead of stalling scans."""
+
+    def test_dpkg_timeout_is_reported(self, monkeypatch):
+        collector = IntegrityCollector()
+        monkeypatch.setattr(
+            collector, "run", lambda *args, **kwargs: (124, "", "timed out")
+        )
+        result = CollectResult(columns=collector.COLUMNS, rows=[])
+
+        assert collector._dpkg_verify(result) is True
+        assert any("dpkg -V timed out" in note for note in result.notes)
+
+
 class TestBinaryTampering:
     """Test detection of altered system binaries."""
 

@@ -28,6 +28,9 @@ from .base import Collector, CollectResult, Column, Row, print_result
 # elsewhere (mostly /etc) a change is common and benign-ish (WARNING).
 BINARY_PREFIXES = ("/bin/", "/sbin/", "/usr/bin/", "/usr/sbin/", "/lib", "/usr/lib")
 RECENT_DAYS = 14
+# Package verification can traverse a very large filesystem. Bound it so a
+# triage scan cannot stall indefinitely; an incomplete check is reported.
+VERIFY_TIMEOUT = 30
 # dpkg -V status columns: "??5??????" — position 3 (index 2) is the md5sum flag
 DPKG_V_RE = re.compile(r"^(\S{9})\s+(?:(\S+)\s+)?(/.*)$")
 DPKG_LOG_RE = re.compile(
@@ -62,10 +65,14 @@ class IntegrityCollector(Collector):
     # ---- package verification --------------------------------------------
 
     def _dpkg_verify(self, result: CollectResult) -> bool:
-        rc, out, err = self.run(["dpkg", "-V"], timeout=120)
+        rc, out, err = self.run(["dpkg", "-V"], timeout=VERIFY_TIMEOUT)
         if rc == 127:
             return False
-        if rc not in (0, 1):  # dpkg -V exits 1 when differences exist
+        if rc == 124:
+            result.notes.append(
+                f"dpkg -V timed out after {VERIFY_TIMEOUT}s; integrity check incomplete"
+            )
+        elif rc not in (0, 1):  # dpkg -V exits 1 when differences exist
             if "root" in (err or "").lower() or not self.is_root():
                 result.notes.append("dpkg -V may need root for a full check")
         for line in out.splitlines():
@@ -96,9 +103,15 @@ class IntegrityCollector(Collector):
         return True
 
     def _rpm_verify(self, result: CollectResult) -> bool:
-        rc, out, _ = self.run(["rpm", "-Va"], timeout=180)
+        rc, out, err = self.run(["rpm", "-Va"], timeout=VERIFY_TIMEOUT)
         if rc == 127:
             return False
+        if rc == 124:
+            result.notes.append(
+                f"rpm -Va timed out after {VERIFY_TIMEOUT}s; integrity check incomplete"
+            )
+        elif rc not in (0, 1) and err:
+            result.notes.append(f"rpm -Va failed: {err.strip()[:160]}")
         for line in out.splitlines():
             parts = line.split()
             if not parts:

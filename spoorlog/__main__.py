@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import sys
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -36,6 +37,21 @@ def main(argv: list[str] | None = None) -> int:
     return 0
 
 
+def _collect_one(collector):
+    """Run one collector and turn failures into reportable evidence."""
+    from .collectors.base import CollectResult
+
+    started = time.perf_counter()
+    try:
+        result = collector.collect()
+    except Exception as exc:  # keep one broken collector from losing the case
+        result = CollectResult(columns=[], rows=[])
+        result.error = f"{type(exc).__name__}: {exc}"
+        result.notes.append(f"collector error: {result.error}")
+    result.duration_ms = round((time.perf_counter() - started) * 1000, 1)
+    return result
+
+
 def _batch_report(path: str | None) -> int:
     from .collectors.config import ConfigCollector
     from .collectors.files import FilesCollector
@@ -60,19 +76,16 @@ def _batch_report(path: str | None) -> int:
         "kernel": KernelCollector(),
         "config": ConfigCollector(),
     }
+    # Collectors are read-only and independent. A bounded pool keeps the
+    # headless scan responsive without creating one thread per collector.
     results = {}
-    for name, c in collectors.items():
-        print(f"[*] {name}…", file=sys.stderr)
-        started = time.perf_counter()
-        try:
-            result = c.collect()
-        except Exception as exc:  # keep one broken collector from losing the case
-            from .collectors.base import CollectResult
-            result = CollectResult(columns=[], rows=[])
-            result.error = f"{type(exc).__name__}: {exc}"
-            result.notes.append(f"collector error: {result.error}")
-        result.duration_ms = round((time.perf_counter() - started) * 1000, 1)
-        results[name] = result
+    with ThreadPoolExecutor(max_workers=4, thread_name_prefix="spoorlog") as pool:
+        futures = {}
+        for name, collector in collectors.items():
+            print(f"[*] {name}…", file=sys.stderr)
+            futures[pool.submit(_collect_one, collector)] = name
+        for future in as_completed(futures):
+            results[futures[future]] = future.result()
     # timeline is an aggregator over the collected rows — build it last
     print("[*] timeline…", file=sys.stderr)
     results["timeline"] = TimelineCollector.build(results)
