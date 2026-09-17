@@ -17,7 +17,10 @@ from .findings import sort_findings
 from . import __version__
 
 
-def build_report(results: dict[str, CollectResult]) -> dict:
+def build_report(
+    results: dict[str, CollectResult],
+    comparison: dict | None = None,
+) -> dict:
     """Assemble a serialisable report from each collector's CollectResult."""
     all_findings = []
     for res in results.values():
@@ -44,7 +47,7 @@ def build_report(results: dict[str, CollectResult]) -> dict:
             "error": res.error,
         }
 
-    return {
+    report = {
         "tool": "spoorlog",
         "version": __version__,
         "generated_at": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
@@ -56,6 +59,9 @@ def build_report(results: dict[str, CollectResult]) -> dict:
         "findings": [f.to_dict() for f in sort_findings(all_findings)],
         "panels": panels,
     }
+    if comparison is not None:
+        report["comparison"] = comparison
+    return report
 
 
 def _counts(findings) -> dict:
@@ -65,13 +71,17 @@ def _counts(findings) -> dict:
     return counts
 
 
-def write_report(results: dict[str, CollectResult], path: str | None = None) -> str:
+def write_report(
+    results: dict[str, CollectResult],
+    path: str | None = None,
+    comparison: dict | None = None,
+) -> str:
     """Write the report to ``path`` (or a timestamped file in cwd) and return
     the path actually written."""
     if path is None:
         stamp = time.strftime("%Y%m%d-%H%M%S")
         path = os.path.abspath(f"spoorlog-report-{socket.gethostname()}-{stamp}.json")
-    report = build_report(results)
-    with open(path, "w") as fh:
+    report = build_report(results, comparison=comparison)
+    with open(path, "w", encoding="utf-8") as fh:
         json.dump(report, fh, indent=2, default=str)
     return path

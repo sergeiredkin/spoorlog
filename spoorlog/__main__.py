@@ -18,7 +18,8 @@ def main(argv: list[str] | None = None) -> int:
         prog="spoorlog",
         description="Terminal forensic triage for live Linux systems.",
     )
-    parser.add_argument(
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument(
         "--report",
         nargs="?",
         const="",
@@ -26,8 +27,24 @@ def main(argv: list[str] | None = None) -> int:
         help="run once headless and write a JSON report to PATH "
              "(default: ./spoorlog-report-<host>-<ts>.json), then exit",
     )
+    mode.add_argument(
+        "--baseline", metavar="PATH",
+        help="capture a report to PATH for a later --compare run",
+    )
+    mode.add_argument(
+        "--compare", metavar="PATH",
+        help="compare a fresh scan with baseline PATH and include the diff",
+    )
+    parser.add_argument(
+        "--output", metavar="PATH",
+        help="output path for --compare (defaults to a timestamped report)",
+    )
     args = parser.parse_args(argv)
 
+    if args.baseline:
+        return _batch_report(args.baseline)
+    if args.compare:
+        return _batch_report(args.output, compare_path=args.compare)
     if args.report is not None:
         return _batch_report(args.report or None)
 
@@ -52,7 +69,7 @@ def _collect_one(collector):
     return result
 
 
-def _batch_report(path: str | None) -> int:
+def _batch_report(path: str | None, compare_path: str | None = None) -> int:
     from .collectors.config import ConfigCollector
     from .collectors.files import FilesCollector
     from .collectors.integrity import IntegrityCollector
@@ -63,7 +80,8 @@ def _batch_report(path: str | None) -> int:
     from .collectors.processes import ProcessCollector
     from .collectors.timeline import TimelineCollector
     from .collectors.users import UsersCollector
-    from .report import write_report
+    from .baseline import compare_reports, load_report
+    from .report import build_report, write_report
 
     collectors = {
         "proc": ProcessCollector(),
@@ -89,7 +107,21 @@ def _batch_report(path: str | None) -> int:
     # timeline is an aggregator over the collected rows — build it last
     print("[*] timeline…", file=sys.stderr)
     results["timeline"] = TimelineCollector.build(results)
-    out = write_report(results, path)
+    comparison = None
+    if compare_path:
+        try:
+            current = build_report(results)
+            comparison = compare_reports(load_report(compare_path), current)
+            counts = comparison["counts"]
+            print(
+                f"[=] baseline diff: +{counts['added']} "
+                f"-{counts['removed']} ~{counts['changed']}",
+                file=sys.stderr,
+            )
+        except (OSError, ValueError) as exc:
+            print(f"[!] baseline comparison failed: {exc}", file=sys.stderr)
+            return 2
+    out = write_report(results, path, comparison=comparison)
     total = sum(len(r.findings) for r in results.values())
     print(f"[+] {total} findings — report written to {out}", file=sys.stderr)
     return 0

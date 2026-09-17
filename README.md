@@ -116,6 +116,17 @@ sudo spoorlog --report          # writes spoorlog-report-<host>-<ts>.json
 sudo spoorlog --report /mnt/usb/case01.json
 ```
 
+Capture and compare a portable point-in-time baseline:
+
+```bash
+sudo spoorlog --baseline /mnt/usb/baseline.json
+sudo spoorlog --compare /mnt/usb/baseline.json --output /mnt/usb/current.json
+```
+
+The comparison is a manual investigation aid. Sentry owns the long-running
+SQLite baseline, alert history, warmup, and suppressions; use spoorlog's
+comparison for a self-contained triage artifact.
+
 Each collector can also be run on its own:
 
 ```bash
@@ -155,8 +166,8 @@ only on hosts you own or are explicitly authorized to inspect.
 kernel / hidden-LKM, config & capability, and timeline capabilities derived from
 Bruce Nikkel's *Practical Linux Forensics*.
 
-Ideas for later: remembering a baseline to diff against on the next run, and a
-time-window narrowing control (last 24h / 7d) on the Timeline tab.
+Ideas for later: accepting Sentry alert context when launching a triage scan,
+and a time-window narrowing control (last 24h / 7d) on the Timeline tab.
 
 ## Contributing
 
