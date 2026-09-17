@@ -53,6 +53,9 @@ class CollectResult:
     rows: list[Row]
     findings: list[Finding] = field(default_factory=list)
     notes: list[str] = field(default_factory=list)  # e.g. "needs root for X"
+    # Populated by the scan runner, not by individual collectors.
+    duration_ms: float | None = None
+    error: str | None = None
 
     def add_finding(self, *args, **kwargs) -> None:
         self.findings.append(Finding(*args, **kwargs))

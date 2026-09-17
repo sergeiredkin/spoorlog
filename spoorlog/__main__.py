@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+import time
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -62,7 +63,16 @@ def _batch_report(path: str | None) -> int:
     results = {}
     for name, c in collectors.items():
         print(f"[*] {name}…", file=sys.stderr)
-        results[name] = c.collect()
+        started = time.perf_counter()
+        try:
+            result = c.collect()
+        except Exception as exc:  # keep one broken collector from losing the case
+            from .collectors.base import CollectResult
+            result = CollectResult(columns=[], rows=[])
+            result.error = f"{type(exc).__name__}: {exc}"
+            result.notes.append(f"collector error: {result.error}")
+        result.duration_ms = round((time.perf_counter() - started) * 1000, 1)
+        results[name] = result
     # timeline is an aggregator over the collected rows — build it last
     print("[*] timeline…", file=sys.stderr)
     results["timeline"] = TimelineCollector.build(results)

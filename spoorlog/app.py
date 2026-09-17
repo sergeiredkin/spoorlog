@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import time
 
 from textual import work
 from textual.app import App, ComposeResult
@@ -119,11 +120,14 @@ class TriageApp(App):
 
     @work(thread=True, group="collect", exclusive=False)
     def _collect(self, name: str, collector: Collector) -> None:
+        started = time.perf_counter()
         try:
             result = collector.collect()
         except Exception as exc:  # pragma: no cover - defensive
             result = CollectResult(columns=[], rows=[])
-            result.notes.append(f"collector error: {exc}")
+            result.error = f"{type(exc).__name__}: {exc}"
+            result.notes.append(f"collector error: {result.error}")
+        result.duration_ms = round((time.perf_counter() - started) * 1000, 1)
         self.call_from_thread(self._apply, name, result)
 
     def _apply(self, name: str, result: CollectResult) -> None:

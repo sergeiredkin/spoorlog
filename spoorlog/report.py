@@ -14,6 +14,7 @@ import time
 
 from .collectors.base import CollectResult
 from .findings import sort_findings
+from . import __version__
 
 
 def build_report(results: dict[str, CollectResult]) -> dict:
@@ -26,12 +27,26 @@ def build_report(results: dict[str, CollectResult]) -> dict:
     for name, res in results.items():
         panels[name] = {
             "columns": [c.key for c in res.columns],
-            "rows": [dict(r.values) for r in res.rows],
+            # Keep row metadata as well as display values: this is evidence,
+            # not merely a rendering snapshot.
+            "rows": [
+                {
+                    "values": dict(r.values),
+                    "severity": r.severity.label if r.severity else None,
+                    "key": r.key,
+                    "detail": r.detail,
+                    "timestamp": r.timestamp,
+                }
+                for r in res.rows
+            ],
             "notes": list(res.notes),
+            "duration_ms": res.duration_ms,
+            "error": res.error,
         }
 
     return {
         "tool": "spoorlog",
+        "version": __version__,
         "generated_at": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
         "host": socket.gethostname(),
         "kernel": platform.release(),
